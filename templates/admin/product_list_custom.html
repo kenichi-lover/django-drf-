@@ -1,0 +1,105 @@
+{# templates/admin/product_list_custom.html #}
+{% extends 'base.html' %}
+{% load i18n admin_urls static %}
+
+{% block content %}
+    <div id="content-main">
+        <h1>{{ title }}</h1>
+
+        {# Messages from Django admin, styled with Bootstrap alerts #}
+        {% if messages %}
+            <ul class="messagelist list-unstyled"> {# Added list-unstyled for Bootstrap #}
+                {% for message in messages %}
+                    <li class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} mt-2" role="alert">
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="card mb-4">
+            <div class="card-header">Add New Product</div>
+            <div class="card-body">
+                <form id="addProductForm" method="POST" action="{% url 'products:product_list' %}">
+                    {% csrf_token %}
+                    {# Render form fields with Bootstrap classes for better styling #}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </form>
+                <div id="add-product-errors" class="alert alert-danger mt-3 d-none"></div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="productTable"> {# Added table-hover for better UX #}
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Active</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Initial products rendered from Python context #}
+                    {% for product in products %}
+                        <tr id="product-row-{{ product.id }}">
+                            <td>{{ product.id }}</td>
+                            {# Assuming 'product_detail' and 'product_edit' are admin change views #}
+                            <td><a href="{% url 'products:product_edit' product.id %}">{{ product.name }}</a></td>{# Adjusted to standard admin change URL #}
+                            <td>{{ product.category.name|default:"N/A" }}</td>
+                            <td>${{ product.price }}</td>
+                            <td>{{ product.stock }}</td>
+                            <td>{% if product.is_active %}Yes{% else %}No{% endif %}</td>
+                            <td>
+                                <a href="{% url 'products:product_edit' product.id %}" class="btn btn-sm btn-info">Edit</a>{# Adjusted to standard admin change URL #}
+                                
+                                <!-- Delete form -->
+                                <form method="post" action="{% url 'products:product_delete' product.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="7">No products found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination remains largely the same, assuming 'cl' is context for custom list view #}
+        {% if cl.show_facets or cl.result_count != cl.full_result_count %}
+            <div class="paginator">
+                {% block pagination %}
+                    {% if cl.result_count != cl.full_result_count %}
+                        <p>{% blocktranslate count cl.result_count as counter %}
+                            {{ counter }} of {{ cl.full_result_count }} results (filtered from {{ cl.full_result_count }} total)
+                        {% endblocktranslate %}</p>
+                    {% endif %}
+                {% endblock %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+
+{% block extra_js %}
+    {# 在这里加载 product_list_ajax.js，因为它将会在 base.html 的 jQuery 加载之后执行 #}
+    <script src="{% static 'js/product_list_ajax.js' %}"></script>
+{% endblock %}
+

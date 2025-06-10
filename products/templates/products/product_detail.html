@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Product Detail: {{ product.name }}{% endblock %}
+
+{% block content %}
+    <h1>Product Detail: {{ product.name }}</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">{{ product.name }}</h5>
+            <p class="card-text"><strong>ID:</strong> {{ product.id }}</p>
+            <p class="card-text"><strong>Description:</strong> {{ product.description|default:"N/A" }}</p>
+            <p class="card-text"><strong>Category:</strong> {{ product.category.name|default:"N/A" }}</p>
+            <p class="card-text"><strong>Price:</strong> ${{ product.price }}</p>
+            <p class="card-text"><strong>Stock:</strong> {{ product.stock }}</p>
+            <p class="card-text"><strong>Active:</strong> {% if product.is_active %}Yes{% else %}No{% endif %}</p>
+            <p class="card-text"><strong>Created At:</strong> {{ product.created_at }}</p>
+            <p class="card-text"><strong>Updated At:</strong> {{ product.updated_at }}</p>
+            <a href="{% url 'products:product_edit' product.id %}" class="btn btn-primary">Edit Product</a>
+            <a href="{% url 'products:product_list' %}" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+{% endblock %}
